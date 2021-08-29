@@ -87,20 +87,20 @@ def getDirections(states, end_state):
         tmp = past
 
 
-# dfs and bfs are same, only difference is Stack and Queue
-def FirstSearch(problem, struct):
-    states = dict()
-    states[problem.getStartState()] = (problem.getStartState(), None)
-    struct.push(problem.getStartState())
+def HelperBFS(problem, start, end):
+    states = {start}
+    struct = util.Queue()
+    struct.push((start, 0))
+    print(start, end)
     while not struct.isEmpty():
-        curr_state = struct.pop()
-        if problem.isGoalState(curr_state):
-            return getDirections(states, curr_state)
-        for neighbour, direction, _ in problem.getSuccessors(curr_state):
+        curr_state, distance = struct.pop()
+        if curr_state == end:
+            return distance
+        for neighbour in problem.getSuccessorsHelper(curr_state):
             if neighbour not in states:
-                states[neighbour] = curr_state, direction
-                struct.push(neighbour)
-    return []
+                states.add(neighbour)
+                struct.push((neighbour, distance + 1))
+    return 0
 
 
 def depthFirstSearch(problem):
@@ -117,12 +117,36 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    return FirstSearch(problem, util.Stack())
+    stack = util.Stack()
+    states = dict()
+    stack.push((problem.getStartState(), problem.getStartState(), None))
+    while not stack.isEmpty():
+        curr_state, parent, direct = stack.pop()
+        if curr_state in states.keys():
+            continue
+        states[curr_state] = (parent, direct)
+        if problem.isGoalState(curr_state):
+            return getDirections(states, curr_state)
+        for neighbour, direction, _ in problem.getSuccessors(curr_state):
+            stack.push((neighbour, curr_state, direction))
+    return []
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    return FirstSearch(problem, util.Queue())
+    queue = util.Queue()
+    states = dict()
+    states[problem.getStartState()] = (problem.getStartState(), None)
+    queue.push(problem.getStartState())
+    while not queue.isEmpty():
+        curr_state = queue.pop()
+        if problem.isGoalState(curr_state):
+            return getDirections(states, curr_state)
+        for neighbour, direction, _ in problem.getSuccessors(curr_state):
+            if neighbour not in states:
+                states[neighbour] = curr_state, direction
+                queue.push(neighbour)
+    return []
 
 
 def uniformCostSearch(problem):
@@ -154,10 +178,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             new_cost = curr_cost + cost
             if neighbour not in states:
                 states[neighbour] = curr_state, direction, new_cost
-                queue.push(neighbour, new_cost + heuristic(neighbour,problem))
+                queue.push(neighbour, new_cost + heuristic(neighbour, problem))
             elif new_cost < states[neighbour][2]:
                 states[neighbour] = (curr_state, direction, new_cost)
-                queue.update(neighbour, new_cost + heuristic(neighbour,problem))
+                queue.update(neighbour, new_cost + heuristic(neighbour, problem))
     return []
 
 

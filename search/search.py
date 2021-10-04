@@ -87,21 +87,6 @@ def getDirections(states, end_state):
         tmp = past
 
 
-def HelperBFS(problem, start, end):
-    states = {start}
-    struct = util.Queue()
-    struct.push((start, 0))
-    print(start, end)
-    while not struct.isEmpty():
-        curr_state, distance = struct.pop()
-        if curr_state == end:
-            return distance
-        for neighbour in problem.getSuccessorsHelper(curr_state):
-            if neighbour not in states:
-                states.add(neighbour)
-                struct.push((neighbour, distance + 1))
-    return 0
-
 
 def depthFirstSearch(problem):
     """

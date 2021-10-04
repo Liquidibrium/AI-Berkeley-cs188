@@ -297,6 +297,10 @@ class CornerState:
         return self.state.__hash__()
 
 
+def manh(x, y):
+    return abs(x[0] - y[0]) + abs(x[1] - y[1])
+
+
 class CornersProblem(search.SearchProblem):
     """
     This search problem finds paths through all four corners of a layout.
@@ -318,7 +322,6 @@ class CornersProblem(search.SearchProblem):
         self._expanded = 0  # DO NOT CHANGE; Number of search nodes expanded
         # Please add any code here which you would like to use
         # in initializing the problem
-        self.heuristic_memo = {}
         "*** YOUR CODE HERE ***"
 
     def getStartState(self):
@@ -326,16 +329,19 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        memo = set()
-        if self.startingPosition in self.corners:
-            memo.add(self.startingPosition)
-        return CornerState(self.startingPosition, memo)
+        "*** YOUR CODE HERE ***"
+        state = set()
+        for corner in self.corners:
+            if self.startingPosition == corner:
+                state.add(corner)
+        return CornerState(self.startingPosition, state)
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
-        return self.corners.__eq__(state.memo)
+        # Return True only if we have visited all the corners
+        return len(self.corners) == len(state.memo)
 
     def getSuccessors(self, state):
         """
@@ -359,26 +365,12 @@ class CornersProblem(search.SearchProblem):
             hitsWall = self.walls[nextx][nexty]
             if not hitsWall:
                 nextState = (nextx, nexty)
-                nextSet = set(state.memo)
+                nextSet = state.memo.copy()
                 if nextState in self.corners:
                     nextSet.add(nextState)
-                successors.append((CornerState(nextState, nextSet), action, 0))
+                successors.append((CornerState(nextState, nextSet), action, 1))
 
         self._expanded += 1  # DO NOT CHANGE
-        return successors
-
-    def getSuccessorsHelper(self, currentPosition):
-        successors = []
-        x, y = currentPosition
-        for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            # Add a successor state to the successor list if the action is legal
-            # Here's a code snippet for figuring out whether a new position hits a wall:
-            dx, dy = Actions.directionToVector(action)
-            nextx, nexty = int(x + dx), int(y + dy)
-            hitsWall = self.walls[nextx][nexty]
-            if not hitsWall:
-                nextState = (nextx, nexty)
-                successors.append(nextState)
         return successors
 
     def getCostOfActions(self, actions):
@@ -393,16 +385,6 @@ class CornersProblem(search.SearchProblem):
             x, y = int(x + dx), int(y + dy)
             if self.walls[x][y]: return 999999
         return len(actions)
-
-
-def manh(x, y):
-    return abs(x[0] - y[0]) + abs(x[1] - y[1])
-
-
-def euc(x, y):
-    dx = abs(x[0] - y[0])
-    dy = abs(x[1] - y[1])
-    return int((dx * dx + dy * dy) ** 0.5)
 
 
 def cornersHeuristic(state, problem):
@@ -422,14 +404,13 @@ def cornersHeuristic(state, problem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
     if walls[state.state[0]][state.state[1]]:
         return 999999
+    distances = []
+    for corner in corners:
+        if corner not in state.memo:
+            h = manh(state.state, corner)
+            distances.append(h)
 
-    remained = corners - state.memo
-    if len(remained) == 0:
-        return 0
-    distance = 9999
-    for corner in remained:
-        distance = min(distance, manh(state.state, corner))
-    return distance
+    return 0 if not distances else max(distances)
 
 
 class AStarCornersAgent(SearchAgent):

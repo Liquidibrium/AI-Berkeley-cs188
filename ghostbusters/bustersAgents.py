@@ -10,9 +10,10 @@
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
-
+import random
 
 import util
+from busters import GameState
 from game import Agent
 from game import Directions
 from keyboardAgents import KeyboardAgent
@@ -141,6 +142,7 @@ class GreedyBustersAgent(BustersAgent):
 
     def registerInitialState(self, gameState):
         "Pre-computes the distance between every two points."
+        gameState = gameState  # type: GameState
         BustersAgent.registerInitialState(self, gameState)
         self.distancer = Distancer(gameState.data.layout, False)
 
@@ -157,3 +159,16 @@ class GreedyBustersAgent(BustersAgent):
             [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
              if livingGhosts[i + 1]]
         "*** YOUR CODE HERE ***"
+        min_distance = 99999999
+        res_action = random.choice(legal)
+
+        for ghost_pos_dist in livingGhostPositionDistributions:
+            ghost_pos = ghost_pos_dist.argMax()
+            for legal_action in legal:
+                successor = Actions.getSuccessor(pacmanPosition, legal_action)
+                distance = self.distancer.getDistance(ghost_pos, successor)
+                if distance < min_distance:
+                    min_distance = distance
+                    res_action = legal_action
+
+        return res_action
